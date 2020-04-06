@@ -64,7 +64,7 @@ static const unsigned char totalBytes[256] = {
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-#if TCL_UTF_MAX > 4
+#if TCL_UTF_MAX != 4
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 #else /* Tcl_UtfCharComplete() might point to 2nd byte of valid 4-byte sequence */
@@ -280,7 +280,7 @@ Tcl_UniCharToUtfDString(
  *	Tcl_UtfCharComplete() before calling this routine to ensure that
  *	enough bytes remain in the string.
  *
- *	If TCL_UTF_MAX <= 4, special handling of Surrogate pairs is done:
+ *	If TCL_UTF_MAX == 4, special handling of Surrogate pairs is done:
  *	For any UTF-8 string containing a character outside of the BMP, the
  *	first call to this function will fill *chPtr with the high surrogate
  *	and generate a return value of 1. Calling Tcl_UtfToUniChar again
@@ -319,7 +319,7 @@ Tcl_UtfToUniChar(
 	 * characters representing themselves.
 	 */
 
-#if TCL_UTF_MAX <= 4
+#if TCL_UTF_MAX == 4
 	/* If *chPtr contains a high surrogate (produced by a previous
 	 * Tcl_UtfToUniChar() call) and the next 3 bytes are UTF-8 continuation
 	 * bytes, then we must produce a follow-up low surrogate. We only
@@ -374,7 +374,7 @@ Tcl_UtfToUniChar(
 	    /*
 	     * Four-byte-character lead byte followed by three trail bytes.
 	     */
-#if TCL_UTF_MAX <= 4
+#if TCL_UTF_MAX == 4
 	    Tcl_UniChar high = (((byte & 0x07) << 8) | ((src[1] & 0x3F) << 2)
 		    | ((src[2] & 0x3F) >> 4)) - 0x40;
 	    if (high >= 0x400) {
@@ -662,7 +662,7 @@ Tcl_UtfNext(
     Tcl_UniChar ch = 0;
     int len = TclUtfToUniChar(src, &ch);
 
-#if TCL_UTF_MAX <= 4
+#if TCL_UTF_MAX == 4
     if ((ch >= 0xD800) && (len < 3)) {
 	len += TclUtfToUniChar(src + len, &ch);
     }
@@ -701,7 +701,7 @@ Tcl_UtfPrev(
     int i, byte;
 
     look = --src;
-    for (i = 0; i < 4; i++) {
+    for (i = 0; i < TCL_UTF_MAX; i++) {
 	if (look < start) {
 	    if (src < start) {
 		src = start;

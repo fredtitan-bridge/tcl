@@ -37,7 +37,8 @@ testConstraint testencoding [llength [info commands testencoding]]
 testConstraint fullutf [expr {[format %c 0x010000] != "\ufffd"}]
 testConstraint exec [llength [info commands exec]]
 testConstraint testgetdefenc [llength [info commands testgetdefenc]]
-
+testConstraint tip389 [expr {[string length \U010000] == 2}]
+
 # TclInitEncodingSubsystem is tested by the rest of this file
 # TclFinalizeEncodingSubsystem is not currently tested
 
@@ -333,7 +334,7 @@ test encoding-15.4 {UtfToUtfProc emoji character input} {
     set y [encoding convertfrom utf-8 \xED\xA0\xBD\xED\xB8\x82]
     list [string length $x] $y
 } "6 \uD83D\uDE02"
-test encoding-15.5 {UtfToUtfProc emoji character input} {
+test encoding-15.5 {UtfToUtfProc emoji character input} tip389 {
     set x \xF0\x9F\x98\x82
     set y [encoding convertfrom utf-8 \xF0\x9F\x98\x82]
     list [string length $x] $y

@@ -23,6 +23,7 @@ catch {unset x}
 # Some tests require support for 4-byte UTF-8 sequences
 testConstraint fullutf [expr {[format %c 0x010000] != "\uFFFD"}]
 testConstraint tip389 [expr {[string length \U010000] == 2}]
+testConstraint compat85 [expr {[format %c 0x010000] == "\uFFFD"}]
 
 test utf-1.1 {Tcl_UniCharToUtf: 1 byte sequences} testbytestring {
     expr {"\x01" eq [testbytestring "\x01"]}
@@ -139,9 +140,9 @@ test utf-4.9 {Tcl_NumUtfChars: #u20AC, calc len, incomplete} {testnumutfchars te
 test utf-4.10 {Tcl_NumUtfChars: #u0000, calc len, overcomplete} {testnumutfchars testbytestring} {
     testnumutfchars [testbytestring "\x00"] 2
 } {2}
-test utf-4.11 {Tcl_NumUtfChars: 3 bytes of 4-byte UTF-8 characater} {testnumutfchars testbytestring} {
+test utf-4.11 {Tcl_NumUtfChars: 3 bytes of 4-byte UTF-8 characater} {testnumutfchars testbytestring compat85} {
     testnumutfchars [testbytestring \xf0\x9f\x92\xa9] 3
-} {3}
+} {2}
 test utf-4.12 {Tcl_NumUtfChars: #4-byte UTF-8 character} {testnumutfchars testbytestring tip389} {
     testnumutfchars [testbytestring \xf0\x9f\x92\xa9] 4
 } {2}
@@ -221,13 +222,13 @@ test utf-7.9.1 {Tcl_UtfPrev} testutfprev {
 test utf-7.9.2 {Tcl_UtfPrev} testutfprev {
     testutfprev A\xF8\xA0\xF8\xA0 3
 } 2
-test utf-7.10 {Tcl_UtfPrev} testutfprev {
+test utf-7.10 {Tcl_UtfPrev} {testutfprev compat85} {
     testutfprev A\xF4\xA0
 } 2
-test utf-7.10.1 {Tcl_UtfPrev} testutfprev {
+test utf-7.10.1 {Tcl_UtfPrev} {testutfprev compat85} {
     testutfprev A\xF4\xA0\xA0\xA0 3
 } 2
-test utf-7.10.2 {Tcl_UtfPrev} testutfprev {
+test utf-7.10.2 {Tcl_UtfPrev} {testutfprev compat85} {
     testutfprev A\xF4\xA0\xF8\xA0 3
 } 2
 test utf-7.11 {Tcl_UtfPrev} testutfprev {
@@ -269,13 +270,13 @@ test utf-7.14.2 {Tcl_UtfPrev} testutfprev {
 test utf-7.15 {Tcl_UtfPrev} testutfprev {
     testutfprev A\xF4\xA0\xA0
 } 3
-test utf-7.15.1 {Tcl_UtfPrev} testutfprev {
+test utf-7.15.1 {Tcl_UtfPrev} {testutfprev compat85} {
     testutfprev A\xF4\xA0\xA0\xA0 4
 } 3
-test utf-7.15.2 {Tcl_UtfPrev} testutfprev {
+test utf-7.15.2 {Tcl_UtfPrev} {testutfprev compat85} {
     testutfprev A\xF4\xA0\xA0\xF8 4
 } 3
-test utf-7.16 {Tcl_UtfPrev} testutfprev {
+test utf-7.16 {Tcl_UtfPrev} {testutfprev compat85} {
     testutfprev A\xE8\xA0\xA0
 } 1
 test utf-7.16.1 {Tcl_UtfPrev} testutfprev {
@@ -305,7 +306,7 @@ test utf-7.18.2 {Tcl_UtfPrev} testutfprev {
 test utf-7.19 {Tcl_UtfPrev} testutfprev {
     testutfprev A\xF8\xA0\xA0\xA0
 } 4
-test utf-7.20 {Tcl_UtfPrev} testutfprev {
+test utf-7.20 {Tcl_UtfPrev} {testutfprev compat85} {
     testutfprev A\xF4\xA0\xA0\xA0
 } 4
 test utf-7.21 {Tcl_UtfPrev} testutfprev {

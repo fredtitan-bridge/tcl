@@ -64,6 +64,23 @@ static const unsigned char totalBytes[256] = {
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,
+    3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
+#if TCL_UTF_MAX > 4
+	4,4,4,4,4,
+#else
+	1,1,1,1,1,
+#endif
+	1,1,1,1,1,1,1,1,1,1,1
+};
+
+static const unsigned char complete[256] = {
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
+    1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 #if TCL_UTF_MAX != 4
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
     1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
@@ -75,8 +92,10 @@ static const unsigned char totalBytes[256] = {
     3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,
 #if TCL_UTF_MAX > 4
     4,4,4,4,4,
-#else
+#elif TCL_UTF_MAX == 4
     3,3,3,3,3, /* Tcl_UtfCharComplete() only checks TCL_UTF_MAX bytes */
+#else
+    1,1,1,1,1,
 #endif
     1,1,1,1,1,1,1,1,1,1,1
 };
@@ -280,7 +299,7 @@ Tcl_UniCharToUtfDString(
  *	Tcl_UtfCharComplete() before calling this routine to ensure that
  *	enough bytes remain in the string.
  *
- *	If TCL_UTF_MAX == 4, special handling of Surrogate pairs is done:
+ *	If TCL_UTF_MAX <= 4, special handling of Surrogate pairs is done:
  *	For any UTF-8 string containing a character outside of the BMP, the
  *	first call to this function will fill *chPtr with the high surrogate
  *	and generate a return value of 1. Calling Tcl_UtfToUniChar again
@@ -319,7 +338,7 @@ Tcl_UtfToUniChar(
 	 * characters representing themselves.
 	 */
 
-#if TCL_UTF_MAX == 4
+#if TCL_UTF_MAX <= 4
 	/* If *chPtr contains a high surrogate (produced by a previous
 	 * Tcl_UtfToUniChar() call) and the next 3 bytes are UTF-8 continuation
 	 * bytes, then we must produce a follow-up low surrogate. We only
@@ -374,7 +393,7 @@ Tcl_UtfToUniChar(
 	    /*
 	     * Four-byte-character lead byte followed by three trail bytes.
 	     */
-#if TCL_UTF_MAX == 4
+#if TCL_UTF_MAX <= 4
 	    Tcl_UniChar high = (((byte & 0x07) << 8) | ((src[1] & 0x3F) << 2)
 		    | ((src[2] & 0x3F) >> 4)) - 0x40;
 	    if (high >= 0x400) {
@@ -497,7 +516,7 @@ Tcl_UtfCharComplete(
 				 * a complete UTF-8 character. */
     int length)			/* Length of above string in bytes. */
 {
-    return length >= totalBytes[(unsigned char)*src];
+    return length >= complete[(unsigned char)*src];
 }
 
 /*
@@ -728,7 +747,7 @@ Tcl_UtfPrev(
     int i, byte;
 
     look = --src;
-    for (i = 0; i < TCL_UTF_MAX; i++) {
+    for (i = 0; i < ((TCL_UTF_MAX >= 4) ? 4 : 3 ); i++) {
 	if (look < start) {
 	    if (src < start) {
 		src = start;
